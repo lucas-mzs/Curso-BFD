@@ -29,6 +29,7 @@ print(time.sleep(3))
 pyautogui.write('Monitor Gamer', interval=0.3)
 pyautogui.press('enter')
 
+# = = = = = = = = = = = =
 
 # print(time.sleep(7))
 # print(pyautogui.click(x=214, y=836))
