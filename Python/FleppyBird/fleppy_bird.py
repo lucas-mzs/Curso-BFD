@@ -2,24 +2,37 @@ import pygame
 import os
 import random
 
-# Configurações da janela
+# Inicializar pygame
+pygame.init()
+
+# Configurações da tela
 TELA_LARGURA = 500
 TELA_ALTURA = 800
+TELA = pygame.display.set_mode((TELA_LARGURA, TELA_ALTURA))
+pygame.display.set_caption("Flappy Bird")
 
-# Carregar imagens (pasta 'imgs' deve conter os arquivos)
-IMAGEM_CANO = pygame.transform.scale2x(pygame.image.load(os.path.join('imgs', 'pipe.png')))
-IMAGEM_CHAO = pygame.transform.scale2x(pygame.image.load(os.path.join('imgs', 'base.png')))
-IMAGEM_BACKGROUND = pygame.transform.scale2x(pygame.image.load(os.path.join('imgs', 'bg.png')))
+# Carregar imagens
+BASE_DIR = os.path.dirname(__file__)
+IMG_DIR = os.path.join(BASE_DIR, "imgs")
+
+IMAGEM_CANO = pygame.transform.scale2x(pygame.image.load(os.path.join(IMG_DIR, "pipe.png")))
+IMAGEM_CHAO = pygame.transform.scale2x(pygame.image.load(os.path.join(IMG_DIR, "base.png")))
+IMAGEM_BACKGROUND = pygame.transform.scale2x(pygame.image.load(os.path.join(IMG_DIR, "bg.png")))
 IMAGENS_PASSARO = [
-    pygame.transform.scale2x(pygame.image.load(os.path.join('imgs', 'bird1.png'))),
-    pygame.transform.scale2x(pygame.image.load(os.path.join('imgs', 'bird2.png'))),
-    pygame.transform.scale2x(pygame.image.load(os.path.join('imgs', 'bird3.png'))),
+    pygame.transform.scale2x(pygame.image.load(os.path.join(IMG_DIR, "bird1.png"))),
+    pygame.transform.scale2x(pygame.image.load(os.path.join(IMG_DIR, "bird2.png"))),
+    pygame.transform.scale2x(pygame.image.load(os.path.join(IMG_DIR, "bird3.png")))
 ]
 
+# Fonte
 pygame.font.init()
-FONTE_PONTOS = pygame.font.SysFont('arial', 50)
+FONTE_PONTOS = pygame.font.SysFont("Arial", 40)
+
+# FPS
+FPS = 30
 
 
+# Classe Pássaro
 class Passaro:
     IMGS = IMAGENS_PASSARO
     ROTACAO_MAXIMA = 25
@@ -33,30 +46,27 @@ class Passaro:
         self.velocidade = 0
         self.altura = self.y
         self.tempo = 0
+        self.imagem = self.IMGS[0]
         self.contagem_imagem = 0
-        self.imagem = self.IMGS[1]
 
     def pular(self):
-        # velocidade negativa para subir (sistema de coordenadas do pygame)
         self.velocidade = -10.5
         self.tempo = 0
         self.altura = self.y
 
     def mover(self):
-        # calcular o deslocamento usando cinemática simples
         self.tempo += 1
-        deslocamento = self.velocidade * self.tempo + 1.5 * (self.tempo ** 2)
+        deslocamento = 1.5 * (self.tempo ** 2) + self.velocidade * self.tempo
 
-        # limitar deslocamento
-        if deslocamento >= 16:
+        if deslocamento > 16:
             deslocamento = 16
         if deslocamento < 0:
-            deslocamento -= 2  # dar um impulso extra ao pulo para ficar mais responsivo
+            deslocamento -= 2
 
         self.y += deslocamento
 
-        # rotação do pássaro
-        if deslocamento < 0 or self.y < (self.altura + 50):
+        # Rotação
+        if deslocamento < 0 or self.y < self.altura + 50:
             if self.angulo < self.ROTACAO_MAXIMA:
                 self.angulo = self.ROTACAO_MAXIMA
         else:
@@ -64,9 +74,9 @@ class Passaro:
                 self.angulo -= self.VELOCIDADE_ROTACAO
 
     def desenhar(self, tela):
-        # escolher frame de animação
         self.contagem_imagem += 1
 
+        # Animação das asas
         if self.contagem_imagem < self.TEMPO_ANIMACAO:
             self.imagem = self.IMGS[0]
         elif self.contagem_imagem < self.TEMPO_ANIMACAO * 2:
@@ -75,25 +85,25 @@ class Passaro:
             self.imagem = self.IMGS[2]
         elif self.contagem_imagem < self.TEMPO_ANIMACAO * 4:
             self.imagem = self.IMGS[1]
-        elif self.contagem_imagem >= self.TEMPO_ANIMACAO * 4:
+        else:
             self.imagem = self.IMGS[0]
             self.contagem_imagem = 0
 
-        # se o pássaro estiver muito caído, não bater as asas
+        # Não bater asa quando estiver caindo
         if self.angulo <= -80:
             self.imagem = self.IMGS[1]
             self.contagem_imagem = self.TEMPO_ANIMACAO * 2
 
-        # desenhar imagem rotacionada em volta do seu centro
         imagem_rotacionada = pygame.transform.rotate(self.imagem, self.angulo)
-        pos_centro_imagem = self.imagem.get_rect(topleft=(self.x, self.y)).center
-        retangulo = imagem_rotacionada.get_rect(center=pos_centro_imagem)
+        pos_centro = self.imagem.get_rect(topleft=(self.x, self.y)).center
+        retangulo = imagem_rotacionada.get_rect(center=pos_centro)
         tela.blit(imagem_rotacionada, retangulo.topleft)
 
     def get_mask(self):
         return pygame.mask.from_surface(self.imagem)
 
 
+# Classe Cano
 class Cano:
     DISTANCIA = 200
     VELOCIDADE = 5
@@ -125,17 +135,18 @@ class Cano:
         topo_mask = pygame.mask.from_surface(self.CANO_TOPO)
         base_mask = pygame.mask.from_surface(self.CANO_BASE)
 
-        distancia_topo = (self.x - passaro.x, self.pos_topo - round(passaro.y))
-        distancia_base = (self.x - passaro.x, self.pos_base - round(passaro.y))
+        topo_offset = (self.x - passaro.x, self.pos_topo - round(passaro.y))
+        base_offset = (self.x - passaro.x, self.pos_base - round(passaro.y))
 
-        topo_ponto = passaro_mask.overlap(topo_mask, distancia_topo)
-        base_ponto = passaro_mask.overlap(base_mask, distancia_base)
+        b_point = passaro_mask.overlap(base_mask, base_offset)
+        t_point = passaro_mask.overlap(topo_mask, topo_offset)
 
-        if topo_ponto or base_ponto:
+        if b_point or t_point:
             return True
         return False
 
 
+# Classe Chão
 class Chao:
     VELOCIDADE = 5
     LARGURA = IMAGEM_CHAO.get_width()
@@ -160,65 +171,64 @@ class Chao:
         tela.blit(self.IMAGEM, (self.x2, self.y))
 
 
+# Função desenhar tela
 def desenhar_tela(tela, passaros, canos, chao, pontos):
     tela.blit(IMAGEM_BACKGROUND, (0, 0))
+    for cano in canos:
+        cano.desenhar(tela)
+
+    texto = FONTE_PONTOS.render(f"{pontos}", 1, (255, 255, 255))
+    tela.blit(texto, (TELA_LARGURA/2 - texto.get_width()/2, 50))
+
+    chao.desenhar(tela)
 
     for passaro in passaros:
         passaro.desenhar(tela)
 
-    for cano in canos:
-        cano.desenhar(tela)
-
-    texto = FONTE_PONTOS.render(f'Pontuação: {pontos}', 1, (255, 55, 225))
-    tela.blit(texto, (TELA_LARGURA - 10 - texto.get_width(), 10))
-
-    chao.desenhar(tela)
     pygame.display.update()
 
 
+# Função principal
 def main():
-    pygame.init()
-    tela = pygame.display.set_mode((TELA_LARGURA, TELA_ALTURA))
-    pygame.display.set_caption('Flappy Bird - Corrigido')
-
     passaros = [Passaro(230, 350)]
     chao = Chao(730)
     canos = [Cano(700)]
-    pontos = 0
+    tela = TELA
     relogio = pygame.time.Clock()
+    pontos = 0
 
     rodando = True
     while rodando:
-        relogio.tick(30)
-
+        relogio.tick(FPS)
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
                 rodando = False
+                pygame.quit()
+                quit()
             if evento.type == pygame.KEYDOWN:
                 if evento.key == pygame.K_SPACE:
                     for passaro in passaros:
                         passaro.pular()
 
-        # mover elementos
+        # Movimento
         for passaro in passaros:
             passaro.mover()
+
         chao.mover()
 
         adicionar_cano = False
-        remover_canos = []
-
+        remover_canos = [] 
         for cano in canos:
-            cano.mover()
             for i, passaro in enumerate(passaros):
                 if cano.colidir(passaro):
-                    # remover passaro da lista
-                    if i < len(passaros):
-                        passaros.pop(i)
+                    rodando = False
+
                 if not cano.passou and passaro.x > cano.x:
                     cano.passou = True
                     adicionar_cano = True
 
-            if cano.x + cano.CANO_TOPO.get_width() < 0:
+            cano.mover()
+            if cano.x + cano.CANO_BASE.get_width() < 0:
                 remover_canos.append(cano)
 
         if adicionar_cano:
@@ -226,23 +236,14 @@ def main():
             canos.append(Cano(600))
 
         for cano in remover_canos:
-            if cano in canos:
-                canos.remove(cano)
+            canos.remove(cano)
 
-        # checar colisão com o chão ou topo
-        for i, passaro in enumerate(passaros):
+        for passaro in passaros:
             if (passaro.y + passaro.imagem.get_height()) > chao.y or passaro.y < 0:
-                if i < len(passaros):
-                    passaros.pop(i)
-
-        # se não houver pássaros, encerrar o jogo
-        if len(passaros) == 0:
-            rodando = False
+                rodando = False
 
         desenhar_tela(tela, passaros, canos, chao, pontos)
 
-    pygame.quit()
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
