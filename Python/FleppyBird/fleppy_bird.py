@@ -1,6 +1,10 @@
 import pygame
 import os
 import random
+import neat
+
+ia_jogando = True
+geracao = 0
 
 # Inicializar pygame
 pygame.init()
@@ -169,7 +173,7 @@ class Chao:
     def desenhar(self, tela):
         tela.blit(self.IMAGEM, (self.x1, self.y))
         tela.blit(self.IMAGEM, (self.x2, self.y))
-
+ 
 
 # Função desenhar tela
 def desenhar_tela(tela, passaros, canos, chao, pontos):
@@ -177,8 +181,12 @@ def desenhar_tela(tela, passaros, canos, chao, pontos):
     for cano in canos:
         cano.desenhar(tela)
 
-    texto = FONTE_PONTOS.render(f"{pontos}", 1, (255, 255, 255))
-    tela.blit(texto, (TELA_LARGURA/2 - texto.get_width()/2, 50))
+    texto = FONTE_PONTOS.render(f"Pontos:  {pontos}", 1, (255, 255, 255))
+    tela.blit(texto, (TELA_LARGURA - 10 - texto.get_width(), 10))
+
+    if ia_jogando:
+        texto = FONTE_PONTOS.render(f"Geração: {geracao}", 1, (255, 255, 255))
+        tela.blit(texto, (10, 10))
 
     chao.desenhar(tela)
 
@@ -190,6 +198,13 @@ def desenhar_tela(tela, passaros, canos, chao, pontos):
 
 # Função principal
 def main():
+    global geracao
+    geracao += 1
+    if ia_jogando:
+        redes = []
+        lista_genomas = []
+        passaros = []
+
     passaros = [Passaro(230, 350)]
     chao = Chao(730)
     canos = [Cano(700)]
