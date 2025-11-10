@@ -1,0 +1,21 @@
+Home Page:
+- Fazer login
+- Criar conta (Autenticação)
+    - Email
+    - Senha
+    - Filmes/Séries já vistos
+    - Editar perfil
+
+Filmes/Séries:
+- Tumb
+- Título
+- Descrição
+- Categoria
+- Quantidade de views
+- Data de crição
+- Epísodios
+    - Títulos
+    - Vídeos
+
+Barra de pesquisa:
+- Favoritos
