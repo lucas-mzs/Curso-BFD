@@ -6,6 +6,9 @@ Home Page:
     - Filmes/Séries já vistos
     - Editar perfil
 
+Barra de pesquisa:
+- Favoritos
+
 Filmes/Séries:
 - Tumb
 - Título
@@ -16,6 +19,3 @@ Filmes/Séries:
 - Epísodios
     - Títulos
     - Vídeos
-
-Barra de pesquisa:
-- Favoritos

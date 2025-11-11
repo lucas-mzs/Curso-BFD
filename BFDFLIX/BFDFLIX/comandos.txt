@@ -1,0 +1,18 @@
+Iniciar um projeto no Django:
+py -m django startproject "NomeDoProjeto"
+
+Criar um app dentro do projeto:
+py -m django startapp "NomeDoApp"
+
+Iniciar servidor:
+cd BFDFlix
+py manage.py runserver
+
+Criar Superusuário:
+py manage.py createsuperuser
+
+Verificar as alterações feitas no sistema:
+py manage.py makemigrations
+
+Fazer as alterações no sistema:
+py manage.py migrate
